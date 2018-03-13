@@ -1,4 +1,4 @@
-#TODO: ADD OPTION TO GENERATE KEY FOR ENCRYPTING USING OPENSSL LIB MAYBE?
+#TODO: Possibly add the option to do Cipher Block Chaining (CBC) mode?
 
 
 import re
@@ -88,12 +88,3 @@ Encrypt.encrypt(message,key)
     #message = hexifyAndMatrixMsg(message)
     #key = tokenize(key,1)
     #key = hexifyAndMatrixKey(key)
-
-    #print(Encrypt.encrypt(message,key,keyLength))
-    #print("Output should be: FA D6 E7 66 8B 20 27 3D C4 7F 7A 61 20 FF 6A A7")
-
-
-
-
-
-raw_input()
