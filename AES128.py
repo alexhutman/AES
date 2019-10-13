@@ -14,12 +14,12 @@ def preliminaries():
     global message
     global key
 
-    xCryptPrompt = raw_input("Would you like to: \n[1] encrypt a message \nOR \n[2] decrypt a message?\n")
+    xCryptPrompt = input("Would you like to: \n[1] encrypt a message \nOR \n[2] decrypt a message?\n")
 
     if xCryptPrompt == "1":
         xCrypt = "en"
-        message = raw_input("Input the message to encrypt: ")
-        encKey = raw_input("Input the 128 bit key you'd like to use to encrypt the message: ")
+        message = input("Input the message to encrypt: ")
+        encKey = input("Input the 128 bit key you'd like to use to encrypt the message: ")
         keyMatch = re.match(r"^[A-Fa-f0-9]{32}$", encKey)
         if not keyMatch == None:
             key = encKey.upper()
@@ -28,8 +28,8 @@ def preliminaries():
 
     elif xCryptPrompt == "2":
         xCrypt = "de"
-        message = raw_input("Input the message to decrypt: ") # MAYBE HAVE TO
-        decKey = raw_input("Input the 128 bit key you'd like to use to encrypt the message: ")
+        message = input("Input the message to decrypt: ") # MAYBE HAVE TO
+        decKey = input("Input the 128 bit key you'd like to use to encrypt the message: ")
         keyMatch = re.match(r"^[A-Fa-f0-9]{32}$", decKey)
         if not keyMatch == None:
             key = decKey.upper()
@@ -37,7 +37,7 @@ def preliminaries():
             print("Invalid key")
 
     else:
-        print "Please enter 1 or 2 to encrypt or decrypt a message, respectively.\n"
+        print("Please enter 1 or 2 to encrypt or decrypt a message, respectively.\n")
         preliminaries()
 
 def padMessage(string_):
