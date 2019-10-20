@@ -86,11 +86,11 @@ def main():
     print(key)
     tokenized_key = tokenize(key, 2)
     hexified_key = hexify(tokenized_key)
-    blockified_key = blockify_and_matrix_msg(hexified_key)
+    blockified_key = blockify_and_matrix_msg(hexified_key)[0]
     print(blockified_key)
     print("-------------------------")
 
-    #Encrypt.encrypt(message, key)
+    encrypt.encrypt(blockified_msg, blockified_key)
 
 
 if __name__ == "__main__":
