@@ -1,7 +1,7 @@
 # TODO: Possibly add the option to do Cipher Block Chaining (CBC) mode?
 import hashlib
-import Encrypt
-import Decrypt
+import encrypt
+import decrypt
 
 
 def prompt_user():

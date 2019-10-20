@@ -1,4 +1,4 @@
-import Lookups
+import lookups
 
 keyLength = None
 roundKeys = None #Index i corresponds to round i
@@ -7,8 +7,8 @@ state = None
 keySchedule = None
 N_b = 4
 N_k = None
-sBox = Lookups.sBox
-multTable = Lookups.multTable
+sBox = lookups.sBox
+multTable = lookups.multTable
 
 def encrypt(msg_,key_):
     global keyLength
