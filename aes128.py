@@ -15,7 +15,7 @@ def prompt_user():
         message = input("Input the message to encrypt: ")
         while not message:
             message = input("Please enter the message you'd like to encrypt: ")
-        message = pad_message(message).encode("utf-8").hex()
+        message = message.encode("utf-8").hex()
 
         # I am aware this is probably not secure or what happens in practice. Choosing the key is not in the
         # specification, so I thought to make the key this because it was the first thing that came to mind and was
@@ -32,20 +32,19 @@ def prompt_user():
         exit(1)
 
 
-def pad_message(string):
-    msg_length = len(string)
-    pad_length = 0 if msg_length % 32 == 0 else ((msg_length // 32) + 1) * 32
-    return '{stringToPad:{fill}<{width}}'.format(stringToPad=string, fill='0', width=pad_length)
-
-
 def tokenize(string, n):
     return [string[i:i + n] for i in range(0, len(string), n)]
 
 
 def hexify(tokenized_arr):
+    msg_length = len(tokenized_arr)
+    pad_length = 0 if msg_length % 16 == 0 else ((msg_length // 16) + 1) * 16 - msg_length
+
     hex_arr = []
     for token in tokenized_arr:
         hex_arr.append(int(token, 16))
+    for i in range(pad_length):
+        hex_arr.append(0)
     return hex_arr
 
 
@@ -77,11 +76,13 @@ def main():
 
     # TODO: For decryption (whenever that time comes), bytes.fromhex(message).decode('utf-8') converts back to msg
 
-    print(message)
+    print("message: {}".format(message))
     tokenized_msg = tokenize(message, 2)
+    print("tokenized message: {}".format(tokenized_msg))
     hexified_msg = hexify(tokenized_msg)
+    print("hexified message: {}".format(hexified_msg))
     blockified_msg = blockify_and_matrix_msg(hexified_msg)
-    print(blockified_msg)
+    print("blockified message: {}".format(blockified_msg))
 
     print(key)
     tokenized_key = tokenize(key, 2)
