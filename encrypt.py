@@ -10,6 +10,8 @@ N_k = None
 s_box = lookups.sBox
 mult_table = lookups.multTable
 
+def hexify_state():
+    return [[hex(j) for j in i] for i in state]
 
 def encrypt(msg_, key_):
     global key_length
@@ -28,11 +30,16 @@ def encrypt(msg_, key_):
     only_first = (2, True)  # To perform all 10 rounds, change to (numRounds,False)
 
     state = add_round_key(state[0], get_round_key(0))  # Add initial key to message block
+    print("state: {}".format(hexify_state()))
     for round_i in range(1, only_first[0]):
         state = byte_sub(state)
+        print("bytesub: {}".format(hexify_state()))
         state = shift_row(state)
+        print("shift_row: {}".format(hexify_state()))
         state = mix_columns(state)
+        print("mix_columns: {}".format(hexify_state()))
         state = add_round_key(state, get_round_key(round_i))
+        print("add_round_key: {}".format(hexify_state()))
 
     if not only_first[1]:
         state = byte_sub(state)

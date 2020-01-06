@@ -88,7 +88,7 @@ def main():
     tokenized_key = tokenize(key, 2)
     hexified_key = hexify(tokenized_key)
     blockified_key = blockify_and_matrix_msg(hexified_key)[0]
-    print(blockified_key)
+    print("blockified key: {}".format(blockified_key))
     print("-------------------------")
 
     encrypt.encrypt(blockified_msg, blockified_key)
