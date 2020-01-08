@@ -50,12 +50,11 @@ def hexify(tokenized_arr):
 
 def blockify_and_matrix_msg(tokenized_msg):
     blockified_msg = []
-    for i in range(len(tokenized_msg) // 16):
+    for block in range(len(tokenized_msg) // 16):
         blockified_msg.append([])
-        for j in range(4):
-            start_index = 4 * (4 * i + j)
-            end_index = 4 * (4 * i + j + 1)
-            blockified_msg[i].append(tokenized_msg[start_index:end_index])
+        for row_num in range(4):
+            row = [tokenized_msg[4*col + row_num] for col in range(4)]
+            blockified_msg[block].append(row)
     return blockified_msg
 
 

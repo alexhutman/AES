@@ -1,5 +1,9 @@
 import lookups
 
+from pprint import pprint
+from matrix import transpose, transpose_blocks
+
+
 key_length = None
 round_keys = None  # Index i corresponds to round i
 num_rounds = 10
@@ -36,11 +40,11 @@ def encrypt(msg_, key_):
     for round_i in range(1, only_first[0]):
         state = byte_sub(state)
         print("round {} - bytesub: {}".format(round_i, hexify_state()))
-        state = shift_row(state)
+        state = transpose(shift_row(transpose(state)))
         print("round {} - shift_row: {}".format(round_i, hexify_state()))
-        state = mix_columns(state)
+        state = transpose(mix_columns(transpose(state)))
         print("round {} - mix_columns: {}".format(round_i, hexify_state()))
-        state = add_round_key(state, get_round_key(round_i))
+        state = transpose(add_round_key(transpose(state), get_round_key(round_i)))
         print("round {} - add_round_key: {}".format(round_i, hexify_state()))
 
     if not only_first[1]:
@@ -128,6 +132,9 @@ def generate_key_schedule(key_):
             w[i] = xor_col(w[i - 4], w[i - 1])
         else:
             w[i] = xor_col(w[i - 4], transform_col(w[i - 1], round_const(i // 4)))
+    print("-"*25)
+    pprint([[hex(a) for a in j] for j in w])
+    print("-"*25)
     key_schedule = w
 
 
