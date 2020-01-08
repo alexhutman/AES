@@ -118,20 +118,29 @@ def add_round_key(state_, key_):  # XOR the state matrix with the key matrix ele
 
 
 ###############################   Below are helper functions   ###################################
+def gen_round_consts():
+    rc = []
+    for i in range(10):
+        real_i = i+1
+        if real_i == 1:
+            rc_str = "01"
+        elif 1 < real_i < 0x80:
+            rc_str = str(2*rc[i])
+        elif 1 < real_i >= 0x80:
+            rc_str = str((2*rc[i]) ^ 0x1B)
+        rc[i] = rc_str + "00"*3
+
+    print(rc)
+ 
+
 def generate_key_schedule(key_):
     global key_schedule
-    w = [[0 for x in range(4)] for y in range(44)]
-    temp = [0 for x in range(4)]
 
-    for row in range(len(key_)):
-        for col in range(len(key_[row])):  # Transpose key_, put into first 4 cols of w
-            w[row][col] = key_[col][row]
 
-    for i in range(4, 44):
-        if i % 4 != 0:
-            w[i] = xor_col(w[i - 4], w[i - 1])
-        else:
-            w[i] = xor_col(w[i - 4], transform_col(w[i - 1], round_const(i // 4)))
+    for i in range((4*11)-1): #TODO: change 11 to num_round keys needed
+        if i<4: #TODO: change 4 to num_words
+
+
     print("-"*25)
     pprint([[hex(a) for a in j] for j in w])
     print("-"*25)
