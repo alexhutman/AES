@@ -4,6 +4,24 @@ from pprint import pprint
 from matrix import transpose, transpose_blocks
 
 
+class Encrypt:
+    def __init__(self, key_length):
+        valid_lengths = [128, 192, 256] # in bits
+        if key_length not in valid_lengths:
+            raise Exception(f"KeyLengthException: Key length must be either {', '.join([str(x) for x in valid_lengths[:-1]])}, or {str(valid_lengths[-1])} bits long (got {key_length}).")
+        else:
+            self.key_length = key_length
+
+        self.num_columns = 4  # Defined in the standard as N_b
+        self.num_words = self.key_length // 32 # Defined in the standard as N_k
+        self.num_rounds = { # Defined in the standard as N_r
+                128: 10,
+                192: 12,
+                256: 14
+                }[self.key_length]
+
+################### Done up to here ###########################
+
 key_length = None
 round_keys = None  # Index i corresponds to round i
 num_rounds = 10
