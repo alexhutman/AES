@@ -139,16 +139,23 @@ def generate_key_schedule(key_):
     global key_schedule
     global rconst
 
+    print("-"*25)
+    print("KEY:")
+    pprint([[hex(a) for a in j] for j in key_])
+    print("-"*25)
+
     w = [[0 for x in range(4)] for y in range(4*11)]
 
     for i in range(4*11): #TODO: change 11 to num_round keys needed
+        print(f"i = {i}")
         if i<4: #TODO: change 4 to num_words
-            w[i] = key[i]           
+            w[i] = key_[i]           
         elif i >= 4 and i % 4 == 0:
-            w[i] = xor_col(w[i - 4], transform_col(w[i - 1], rconst[i // 4]))
+            w[i] = xor_col(w[i - 4], transform_col(w[i - 1], rconst[(i // 4) - 1]))
         elif i >= 4 and 4 > 6 and i % N == 4:
-            #TODO: jeff
+            w[i] = xor_col(w[i - 4], [s_box(x) for x in w[i-1]])
         else:
+            w[i] = xor_col(w[i - 4], w[i-1])
 
 
     print("-"*25)
