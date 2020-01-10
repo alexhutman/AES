@@ -13,6 +13,7 @@ N_b = 4
 N_k = None
 s_box = lookups.sBox
 mult_table = lookups.multTable
+rconst = None
 
 def hexify_state():
     hexed_list = [hex(j)[2:].rjust(2, '0') for i in state for j in i]
@@ -24,12 +25,14 @@ def encrypt(msg_, key_):
     global round_keys
     global N_k
     global state
+    global rconst
 
     round_keys = [key_]
 
     state = msg_
     key = key_
-
+    
+    rconst = gen_round_consts()
     generate_key_schedule(key_)
 
     # Begin perform encryption of the first block
@@ -119,26 +122,33 @@ def add_round_key(state_, key_):  # XOR the state matrix with the key matrix ele
 
 ###############################   Below are helper functions   ###################################
 def gen_round_consts():
-    rc = []
+    rc = [None]*10
     for i in range(10):
-        real_i = i+1
-        if real_i == 1:
-            rc_str = "01"
-        elif 1 < real_i < 0x80:
-            rc_str = str(2*rc[i])
-        elif 1 < real_i >= 0x80:
-            rc_str = str((2*rc[i]) ^ 0x1B)
-        rc[i] = rc_str + "00"*3
-
-    print(rc)
- 
+        if i == 0:
+            print("== 1")
+            rc[i] = 1
+        elif i > 0 and rc[i-1] < 0x80:
+            print("1 < i < 0x80")
+            rc[i] = 2*rc[i-1]
+        elif i > 0 and rc[i - 1] >= 0x80:
+            print("1 < i >= 0x80")
+            rc[i] = ((2*rc[i-1]) ^ 0x1B) & 0xFF # Masking with 0xFF because elements in GF256 are 8 bits long
+    return rc
 
 def generate_key_schedule(key_):
     global key_schedule
+    global rconst
 
+    w = [[0 for x in range(4)] for y in range(4*11)]
 
-    for i in range((4*11)-1): #TODO: change 11 to num_round keys needed
+    for i in range(4*11): #TODO: change 11 to num_round keys needed
         if i<4: #TODO: change 4 to num_words
+            w[i] = key[i]           
+        elif i >= 4 and i % 4 == 0:
+            w[i] = xor_col(w[i - 4], transform_col(w[i - 1], rconst[i // 4]))
+        elif i >= 4 and 4 > 6 and i % N == 4:
+            #TODO: jeff
+        else:
 
 
     print("-"*25)
@@ -178,7 +188,6 @@ def xor_col(col1, col2):  # Bitwise XOR 2 vectors instead of having to do it for
     for i in range(len(col1)):
         temp[i] = col1[i] ^ col2[i]
     return temp
-
 
 def transform_col(col, r_const):
     """
