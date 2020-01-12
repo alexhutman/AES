@@ -22,24 +22,25 @@ class Encrypt:
         N_b = 4  # Number of columns. Defined in the standard as 4
         N_k, N_r = Encrypt.__calculate_constants(key, key_length)
 
-        round_keys = Encrypt.__generate_key_schedule(key)
+        key_schedule = Encrypt.__generate_key_schedule(key)
 
-        state = __add_round_key(msg[0], __get_round_key(0))  # Add initial key to message block
+        state = Encrypt.__add_round_key(msg[0], Encrypt.__get_round_key(0, key_schedule))  # Add initial key to message block
 
         #TODO: Add support for multiple blocks
         print("round {} - state: {}".format(0, hexify_state(state)))
-        for round_i in range(1, N_r+1):
+        #for round_i in range(1, N_r+1):
+        for round_i in range(0, 1):
             state = Encrypt.__byte_sub(state)
-            print("round {} - bytesub: {}".format(round_i, hexify_state()))
+            print("round {} - bytesub: {}".format(round_i, hexify_state(state)))
             state = transpose(Encrypt.__shift_row(transpose(state)))
-            print("round {} - shift_row: {}".format(round_i, hexify_state()))
+            print("round {} - shift_row: {}".format(round_i, hexify_state(state)))
             state = transpose(Encrypt.__mix_columns(transpose(state)))
-            print("round {} - mix_columns: {}".format(round_i, hexify_state()))
-            state = transpose(Encrypt.__add_round_key(transpose(state), Encrypt.__get_round_key(round_i)))
-            print("round {} - add_round_key: {}".format(round_i, hexify_state()))
+            print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
+            state = transpose(Encrypt.__add_round_key(transpose(state), Encrypt.__get_round_key(round_i, key_schedule)))
+            print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
 
         print("ROUND KEY:")
-        pprint(hexify_state(__get_round_key(1)))
+        pprint(hexify_state(Encrypt.__get_round_key(1, key_schedule)))
 
         print("STATE:")
         pprint(hexify_state(state))
@@ -65,28 +66,20 @@ class Encrypt:
     @staticmethod
     def __generate_key_schedule(key): #TODO: add key_length as a parameter to generate only necessary round constants
         Rcon = Encrypt.__generate_round_consts()
-        print("-"*25)
-        print("KEY:")
-        pprint([hex(byte) for byte in key])
-        print("-"*25)
 
         w = []
-
         for i in range(4*11): #TODO: change 11 to num_round keys needed
             print(f"i = {i}")
             if i<4: #TODO: change 4 to num_words
-                w.append(key[i])
+                w.append(key[4*i:4*i+4])
             elif i >= 4 and i % 4 == 0:
                 w.append(Encrypt.__xor_col(w[i - 4], Encrypt.__transform_col(w[i - 1], Rcon[(i // 4) - 1])))
             elif i >= 4 and 4 > 6 and i % N == 4:
                 w.append(Encrypt.__xor_col(w[i - 4], [lookups.s_box(x) for x in w[i-1]]))
             else:
                 w.append(Encrypt.__xor_col(w[i - 4], w[i-1]))
+            print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
 
-
-        print("-"*25)
-        pprint([[hex(a) for a in j] for j in w])
-        print("-"*25)
         return w
 
     @staticmethod
@@ -114,7 +107,7 @@ class Encrypt:
     @staticmethod
     def __shift_row(state):  # Rotate the ith row of the state matrix by i positions
         for row in range(len(state)):
-            state[row] = __rot_word(state[row], row)
+            state[row] = Encrypt.__rot_word(state[row], row)
         return state
 
     @staticmethod
@@ -143,19 +136,12 @@ class Encrypt:
     @staticmethod
     def __add_round_key(state, key):  # XOR the state matrix with the key matrix element-wise
         for i in range(len(state)):
-            state[i] = __xor_col(state[i], key[i])
+            state[i] = Encrypt.__xor_col(state[i], key[i])
         return state
 
     @staticmethod
-    def __get_round_key(cur_round):
-        global key_schedule
-        temp = [key_schedule[4 * cur_round + i] for i in range(4)]
-        round_key = [[0 for x in range(4)] for y in range(4)]
-
-        for row in range(len(temp)):  # Transpose matrix again since key_schedule is in terms of columns
-            for col in range(len(temp[row])):
-                round_key[row][col] = temp[col][row]
-        return round_key
+    def __get_round_key(cur_round, key_schedule):
+        return transpose(key_schedule[4*cur_round:4*cur_round+4])
 
 
     @staticmethod
