@@ -1,5 +1,5 @@
 import hashlib
-import encrypt
+from encrypt import Encrypt
 import decrypt
 
 from matrix import transpose, transpose_blocks
@@ -57,17 +57,17 @@ def test():
     #        "2B", "7E", "15", "16", "28", "AE", "D2", "A6", "AB", "F7", "15", "88", "09", "CF", "4F", "3C"
     #]
 
-    blockified_key = tokenize(hexify(key_list), 4)
-
     blocked = tokenize(hexify(msg_list), 16)
     blocked = vecs_to_matrices(blocked)
     #blocked = transpose_blocks(blocked)
-
+    
+    hexed_key = hexify(key_list)
     #pprint(blocked)
     #pprint(blockified_key)
     pprint(TEST_int_block_to_hex(blocked[0]))
-    pprint(TEST_int_block_to_hex(blockified_key))
+    pprint(key_list)
 
+    Encrypt.AES128(blocked, hexed_key)
 
 if __name__ == "__main__":
     test()
