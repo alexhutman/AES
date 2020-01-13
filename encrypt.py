@@ -19,31 +19,47 @@ class Encrypt:
 
     @staticmethod
     def __encrypt(msg, key, key_length):
+        print("-"*25)
+        print("MSG:")
+        pprint(msg)
+        print("-"*25)
+        print("KEY:")
+        pprint(key)
+        print("-"*25)
+
         N_b = 4  # Number of columns. Defined in the standard as 4
         N_k, N_r = Encrypt.__calculate_constants(key, key_length)
 
         key_schedule = Encrypt.__generate_key_schedule(key)
+        print("-"*25)
+        print("KEY SCHEDULE:")
+        pprint(key_schedule)
+        print("-"*25)
 
         state = Encrypt.__add_round_key(msg[0], Encrypt.__get_round_key(0, key_schedule))  # Add initial key to message block
 
         #TODO: Add support for multiple blocks
         print("round {} - state: {}".format(0, hexify_state(state)))
         #for round_i in range(1, N_r+1):
-        for round_i in range(0, 1):
+        for round_i in range(1, N_r+1):
             state = Encrypt.__byte_sub(state)
             print("round {} - bytesub: {}".format(round_i, hexify_state(state)))
             state = transpose(Encrypt.__shift_row(transpose(state)))
             print("round {} - shift_row: {}".format(round_i, hexify_state(state)))
-            state = transpose(Encrypt.__mix_columns(transpose(state)))
-            print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
-            state = transpose(Encrypt.__add_round_key(transpose(state), Encrypt.__get_round_key(round_i, key_schedule)))
+            if round_i != N_r:
+                state = transpose(Encrypt.__mix_columns(transpose(state)))
+                print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
+
+            print("-"*25)
+            print(f"ROUND KEY FOR ROUND {round_i}:")
+            r_key = Encrypt.__get_round_key(round_i, key_schedule)
+            print(hexify_state(r_key))
+            print("-"*25)
+
+            state = Encrypt.__add_round_key(state, r_key)
             print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
 
-        print("ROUND KEY:")
-        pprint(hexify_state(Encrypt.__get_round_key(1, key_schedule)))
-
-        print("STATE:")
-        pprint(hexify_state(state))
+        return state
 
     @staticmethod
     def __calculate_constants(key, key_length):
@@ -69,7 +85,7 @@ class Encrypt:
 
         w = []
         for i in range(4*11): #TODO: change 11 to num_round keys needed
-            print(f"i = {i}")
+            #print(f"i = {i}")
             if i<4: #TODO: change 4 to num_words
                 w.append(key[4*i:4*i+4])
             elif i >= 4 and i % 4 == 0:
@@ -78,7 +94,7 @@ class Encrypt:
                 w.append(Encrypt.__xor_col(w[i - 4], [lookups.s_box(x) for x in w[i-1]]))
             else:
                 w.append(Encrypt.__xor_col(w[i - 4], w[i-1]))
-            print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
+            #print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
 
         return w
 
@@ -87,13 +103,10 @@ class Encrypt:
         rc = []
         for i in range(10):
             if i == 0:
-                print("== 1")
                 rc.append(1)
             elif i > 0 and rc[i-1] < 0x80:
-                print("1 < i < 0x80")
                 rc.append(2*rc[i-1])
             elif i > 0 and rc[i - 1] >= 0x80:
-                print("1 < i >= 0x80")
                 rc.append(((2*rc[i-1]) ^ 0x1B) & 0xFF) # Masking with 0xFF because elements in GF256 are 8 bits long
         return rc
 
@@ -134,15 +147,19 @@ class Encrypt:
         return state_prime
 
     @staticmethod
-    def __add_round_key(state, key):  # XOR the state matrix with the key matrix element-wise
-        for i in range(len(state)):
-            state[i] = Encrypt.__xor_col(state[i], key[i])
-        return state
+    def __add_round_key(state, round_key):  # XOR the state matrix with the key matrix element-wise
+        #for i in range(len(state)):
+            #state[i] = Encrypt.__xor_col(state[i], round_key[i])
+        print("-"*25)
+        print("ADDING STATE AND KEY:")
+        pprint(hexify_state(state))
+        pprint(hexify_state(round_key))
+        print("-"*25)
+        return [Encrypt.__xor_col(state[i], round_key[i]) for i in range(len(round_key))]
 
     @staticmethod
     def __get_round_key(cur_round, key_schedule):
-        return transpose(key_schedule[4*cur_round:4*cur_round+4])
-
+        return key_schedule[4*cur_round:4*cur_round+4]
 
     @staticmethod
     def __round_const(cur_round):  # Return the round constant for round cur_round
@@ -151,7 +168,6 @@ class Encrypt:
         else:
             """ Returns the polynomial x^(curRound-1) in GF(256)/(x^8 + x^4 + x^3 + x + 1) """
             return lookups.mult_table[0x2, __round_const(cur_round - 1)]
-
 
     @staticmethod
     def __rot_word(arr, n):  # left shift array by n. For example, __rot_word([1,2,3,4], 1) returns [2,3,4,1]
