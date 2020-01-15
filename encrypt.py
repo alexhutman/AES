@@ -62,7 +62,6 @@ class Encrypt:
         for block in msg:
             state = Encrypt.__add_round_key(block, Encrypt.__get_round_key(0))  # Add initial key to message block
 
-            #TODO: Add support for multiple blocks
             print("round {} - state: {}".format(0, hexify_state(state)))
             for round_i in range(1, Encrypt.N_r+1):
                 state = Encrypt.__byte_sub(state)
@@ -83,9 +82,6 @@ class Encrypt:
                 print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
 
             encrypted_blocks.append(state)
-
-        print("ENCRYPTED BLOCKZ:")
-        pprint(encrypted_blocks)
 
         return "".join([hexify_state(enc_block) for enc_block in encrypted_blocks])
 
