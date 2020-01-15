@@ -5,20 +5,43 @@ from matrix import transpose, transpose_blocks
 
 
 class Encrypt:
+    N_b = 4  # Number of columns. Defined in the standard as 4
+
     @staticmethod
     def AES128(msg, key):
-        return Encrypt.__encrypt(msg, key, 128)
+        try:
+            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 128)
+        finally:
+            res = Encrypt.__encrypt(msg, key)
+            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
+                del obj
+
+            return res
 
     @staticmethod
     def AES192(msg, key):
-        return Encrypt.__encrypt(msg, key, 192)
+        try:
+            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 192)
+        finally:
+            res = Encrypt.__encrypt(msg, key)
+            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
+                del obj
+
+            return res
 
     @staticmethod
     def AES256(msg, key):
-        return Encrypt.__encrypt(msg, key, 256)
+        try:
+            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 256)
+        finally:
+            res = Encrypt.__encrypt(msg, key)
+            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
+                del obj
+
+            return res
 
     @staticmethod
-    def __encrypt(msg, key, key_length):
+    def __encrypt(msg, key):
         print("-"*25)
         print("MSG:")
         pprint(msg)
@@ -27,39 +50,44 @@ class Encrypt:
         pprint(key)
         print("-"*25)
 
-        N_b = 4  # Number of columns. Defined in the standard as 4
-        N_k, N_r = Encrypt.__calculate_constants(key, key_length)
 
-        key_schedule = Encrypt.__generate_key_schedule(key)
+        Encrypt.key_schedule = Encrypt.__generate_key_schedule(key)
         print("-"*25)
         print("KEY SCHEDULE:")
-        pprint(key_schedule)
+        pprint(Encrypt.key_schedule)
         print("-"*25)
 
-        state = Encrypt.__add_round_key(msg[0], Encrypt.__get_round_key(0, key_schedule))  # Add initial key to message block
+        encrypted_blocks = []
 
-        #TODO: Add support for multiple blocks
-        print("round {} - state: {}".format(0, hexify_state(state)))
-        #for round_i in range(1, N_r+1):
-        for round_i in range(1, N_r+1):
-            state = Encrypt.__byte_sub(state)
-            print("round {} - bytesub: {}".format(round_i, hexify_state(state)))
-            state = transpose(Encrypt.__shift_row(transpose(state)))
-            print("round {} - shift_row: {}".format(round_i, hexify_state(state)))
-            if round_i != N_r:
-                state = transpose(Encrypt.__mix_columns(transpose(state)))
-                print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
+        for block in msg:
+            state = Encrypt.__add_round_key(block, Encrypt.__get_round_key(0))  # Add initial key to message block
 
-            print("-"*25)
-            print(f"ROUND KEY FOR ROUND {round_i}:")
-            r_key = Encrypt.__get_round_key(round_i, key_schedule)
-            print(hexify_state(r_key))
-            print("-"*25)
+            #TODO: Add support for multiple blocks
+            print("round {} - state: {}".format(0, hexify_state(state)))
+            for round_i in range(1, Encrypt.N_r+1):
+                state = Encrypt.__byte_sub(state)
+                print("round {} - bytesub: {}".format(round_i, hexify_state(state)))
+                state = transpose(Encrypt.__shift_row(transpose(state)))
+                print("round {} - shift_row: {}".format(round_i, hexify_state(state)))
+                if round_i != Encrypt.N_r:
+                    state = transpose(Encrypt.__mix_columns(transpose(state)))
+                    print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
 
-            state = Encrypt.__add_round_key(state, r_key)
-            print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
+                print("-"*25)
+                print(f"ROUND KEY FOR ROUND {round_i}:")
+                r_key = Encrypt.__get_round_key(round_i)
+                print(hexify_state(r_key))
+                print("-"*25)
 
-        return state
+                state = Encrypt.__add_round_key(state, r_key)
+                print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
+
+            encrypted_blocks.append(state)
+
+        print("ENCRYPTED BLOCKZ:")
+        pprint(encrypted_blocks)
+
+        return "".join([hexify_state(enc_block) for enc_block in encrypted_blocks])
 
     @staticmethod
     def __calculate_constants(key, key_length):
@@ -158,8 +186,8 @@ class Encrypt:
         return [Encrypt.__xor_col(state[i], round_key[i]) for i in range(len(round_key))]
 
     @staticmethod
-    def __get_round_key(cur_round, key_schedule):
-        return key_schedule[4*cur_round:4*cur_round+4]
+    def __get_round_key(cur_round):
+        return Encrypt.key_schedule[4*cur_round:4*cur_round+4]
 
     @staticmethod
     def __round_const(cur_round):  # Return the round constant for round cur_round

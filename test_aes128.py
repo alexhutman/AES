@@ -53,6 +53,7 @@ def test():
     key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f" 
     ]
 
+
     #key_list = [
     #        "2B", "7E", "15", "16", "28", "AE", "D2", "A6", "AB", "F7", "15", "88", "09", "CF", "4F", "3C"
     #]
@@ -62,12 +63,12 @@ def test():
     #blocked = transpose_blocks(blocked)
     
     hexed_key = hexify(key_list)
-    #pprint(blocked)
+    pprint(blocked)
     #pprint(blockified_key)
     #pprint(TEST_int_block_to_hex(blocked[0]))
     #pprint(key_list)
 
-    Encrypt.AES128(blocked, hexed_key)
+    print(f"FINAL RESULT: {Encrypt.AES128(blocked, hexed_key)}")
 
 if __name__ == "__main__":
     test()
