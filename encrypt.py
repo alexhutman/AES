@@ -9,30 +9,20 @@ class Encrypt:
 
     @staticmethod
     def AES128(msg, key):
-        try:
-            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 128)
-        finally:
-            res = Encrypt.__encrypt(msg, key)
-            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
-                del obj
-
-            return res
+        return Encrypt.__encrypt_wrapper(msg, key, 128)
 
     @staticmethod
     def AES192(msg, key):
-        try:
-            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 192)
-        finally:
-            res = Encrypt.__encrypt(msg, key)
-            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
-                del obj
-
-            return res
+        return Encrypt.__encrypt_wrapper(msg, key, 192)
 
     @staticmethod
     def AES256(msg, key):
+        return Encrypt.__encrypt_wrapper(msg, key, 256)
+
+    @staticmethod
+    def __encrypt_wrapper(msg, key, key_length):
         try:
-            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, 256)
+            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, key_length)
         finally:
             res = Encrypt.__encrypt(msg, key)
             for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
@@ -92,6 +82,8 @@ class Encrypt:
                 192: 12,
                 256: 14
         }
+        print(f"KEY LEN: {len(key)}")
+        print(f"KEY: {key}")
         if key_length not in num_rounds:
             raise Exception(f"KeyLengthException: Key length must be either {', '.join([str(x) for x in num_rounds[:-1]])}, or {str(num_rounds[-1])} bits long (got {key_length}).")
 
