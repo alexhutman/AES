@@ -23,12 +23,13 @@ class Encrypt:
     def __encrypt_wrapper(msg, key, key_length):
         try:
             Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, key_length)
-        finally:
+
             res = Encrypt.__encrypt(msg, key)
+        finally:
             for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
                 del obj
 
-            return res
+        return res
 
     @staticmethod
     def __encrypt(msg, key):
@@ -100,16 +101,16 @@ class Encrypt:
         Rcon = Encrypt.__generate_round_consts()
 
         w = []
-        for i in range(4*11): #TODO: change 11 to num_round keys needed
+        for i in range(4*Encrypt.N_r): #TODO: change 11 to num_round keys needed
             #print(f"i = {i}")
-            if i<4: #TODO: change 4 to num_words
+            if i < Encrypt.N_k:
                 w.append(key[4*i:4*i+4])
-            elif i >= 4 and i % 4 == 0:
-                w.append(Encrypt.__xor_col(w[i - 4], Encrypt.__transform_col(w[i - 1], Rcon[(i // 4) - 1])))
-            elif i >= 4 and 4 > 6 and i % N == 4:
-                w.append(Encrypt.__xor_col(w[i - 4], [lookups.s_box(x) for x in w[i-1]]))
+            elif i >= Encrypt.N_k and i % Encrypt.N_k == 0:
+                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], Encrypt.__transform_col(w[i - 1], Rcon[(i // Encrypt.N_k) - 1])))
+            elif i >= Encrypt.N_k and Encrypt.N_k > 6 and i % Encrypt.N_k == 4:
+                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], [lookups.s_box(x) for x in w[i-1]]))
             else:
-                w.append(Encrypt.__xor_col(w[i - 4], w[i-1]))
+                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], w[i-1]))
             #print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
 
         return w
