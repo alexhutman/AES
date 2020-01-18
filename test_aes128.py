@@ -53,10 +53,16 @@ def test():
     #long_msg_list = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "aa", "bb", "cc", "dd", "ee", "ff",
     #   "33"]
 
-    key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f" 
-    ]
 
+    # 128 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+    #key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f"]
+
+    # 192 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
     #key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17"] 
+
+    # 256 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+    key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "1a", "1b", "1c", "1d", "1e", "1f"] 
+
 
     #key_list = [
     #        "2B", "7E", "15", "16", "28", "AE", "D2", "A6", "AB", "F7", "15", "88", "09", "CF", "4F", "3C"
@@ -72,8 +78,9 @@ def test():
     #pprint(TEST_int_block_to_hex(blocked[0]))
     #pprint(key_list)
 
-    print(f"FINAL RESULT: {Encrypt.AES128(blocked, hexed_key)}")
+    #print(f"FINAL RESULT: {Encrypt.AES128(blocked, hexed_key)}")
     #print(f"FINAL RESULT: {Encrypt.AES192(blocked, hexed_key)}")
+    print(f"FINAL RESULT: {Encrypt.AES256(blocked, hexed_key)}")
 
 if __name__ == "__main__":
     test()

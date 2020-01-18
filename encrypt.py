@@ -45,7 +45,7 @@ class Encrypt:
         Encrypt.key_schedule = Encrypt.__generate_key_schedule(key)
         print("-"*25)
         print("KEY SCHEDULE:")
-        pprint(Encrypt.key_schedule)
+        pprint([[hex(a) for a in row] for row in Encrypt.key_schedule])
         print("-"*25)
 
         encrypted_blocks = []
@@ -101,15 +101,20 @@ class Encrypt:
         Rcon = Encrypt.__generate_round_consts()
 
         w = []
-        for i in range(4*Encrypt.N_r): #TODO: change 11 to num_round keys needed
+        print(f"4*N_r: {4*Encrypt.N_r}")
+        for i in range(4*(Encrypt.N_r+1)): #TODO: change 11 to num_round keys needed
             #print(f"i = {i}")
             if i < Encrypt.N_k:
+                print("Case 1")
                 w.append(key[4*i:4*i+4])
             elif i >= Encrypt.N_k and i % Encrypt.N_k == 0:
+                print("Case 2")
                 w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], Encrypt.__transform_col(w[i - 1], Rcon[(i // Encrypt.N_k) - 1])))
             elif i >= Encrypt.N_k and Encrypt.N_k > 6 and i % Encrypt.N_k == 4:
-                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], [lookups.s_box(x) for x in w[i-1]]))
+                print("Case 3")
+                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], [lookups.s_box[x] for x in w[i-1]]))
             else:
+                print("Case 4")
                 w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], w[i-1]))
             #print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
 
