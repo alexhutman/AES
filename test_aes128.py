@@ -53,34 +53,45 @@ def test():
     #long_msg_list = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "aa", "bb", "cc", "dd", "ee", "ff",
     #   "33"]
 
-
-    # 128 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
-    #key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f"]
-
-    # 192 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
-    #key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17"] 
-
-    # 256 bit test vector from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
-    key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "1a", "1b", "1c", "1d", "1e", "1f"] 
-
-
     #key_list = [
     #        "2B", "7E", "15", "16", "28", "AE", "D2", "A6", "AB", "F7", "15", "88", "09", "CF", "4F", "3C"
     #]
 
     blocked = tokenize(hexify_and_pad(msg_list), 16)
     blocked = vecs_to_matrices(blocked)
-    #blocked = transpose_blocks(blocked)
     
-    hexed_key = hexify(key_list)
     pprint(blocked)
     #pprint(blockified_key)
     #pprint(TEST_int_block_to_hex(blocked[0]))
     #pprint(key_list)
+    
+    true_ciphertexts = ["69c4e0d86a7b0430d8cdb78070b4c55a", "dda97ca4864cdfe06eaf70a0ec0d7191", "8ea2b7ca516745bfeafc49904b496089"]
 
-    #print(f"FINAL RESULT: {Encrypt.AES128(blocked, hexed_key)}")
-    #print(f"FINAL RESULT: {Encrypt.AES192(blocked, hexed_key)}")
-    print(f"FINAL RESULT: {Encrypt.AES256(blocked, hexed_key)}")
+    ciphertexts = []
+    res_strings = []
+    for i, func in enumerate([Encrypt.AES128, Encrypt.AES192, Encrypt.AES256]): 
+        # 128, 192, and 256 bit test vectors from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
+        key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f"]
+        if i > 0:
+            key_list += ["10", "11", "12", "13", "14", "15", "16", "17"] 
+        if i > 1:
+            key_list += ["18", "19", "1a", "1b", "1c", "1d", "1e", "1f"] 
+
+        hexed_key = hexify(key_list)
+
+        ciphertexts.append(func(blocked, hexed_key))
+
+        if ciphertexts[i] != true_ciphertexts[i]:
+            res_strings.append(f"{func.__name__} FAILED: \"{ciphertexts[i]}\" != \"{true_ciphertexts[i]}\"")
+
+    print("-"*25)
+
+    if not res_strings:
+        print("ALL TESTS HAVE PASSED!")
+    else:
+        for res_string in res_strings:
+            print(res_string)
+
 
 if __name__ == "__main__":
     test()
