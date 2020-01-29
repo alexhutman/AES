@@ -3,36 +3,13 @@ import lookups
 from pprint import pprint
 from matrix import transpose, transpose_blocks
 
-
 class Encrypt:
-    N_b = 4  # Number of columns. Defined in the standard as 4
+    def __init__(self, key_len):
+        self.N_b = 4  # Number of columns. Defined in the standard as 4
 
-    @staticmethod
-    def AES128(msg, key):
-        return Encrypt.__encrypt_wrapper(msg, key, 128)
+        self.key_length = key_len
 
-    @staticmethod
-    def AES192(msg, key):
-        return Encrypt.__encrypt_wrapper(msg, key, 192)
-
-    @staticmethod
-    def AES256(msg, key):
-        return Encrypt.__encrypt_wrapper(msg, key, 256)
-
-    @staticmethod
-    def __encrypt_wrapper(msg, key, key_length):
-        try:
-            Encrypt.N_k, Encrypt.N_r = Encrypt.__calculate_constants(key, key_length)
-
-            res = Encrypt.__encrypt(msg, key)
-        finally:
-            for obj in [Encrypt.N_k, Encrypt.N_r, Encrypt.key_schedule]:
-                del obj
-
-        return res
-
-    @staticmethod
-    def __encrypt(msg, key):
+    def encrypt(self, msg, key):
         print("-"*25)
         print("MSG:")
         pprint(msg)
@@ -40,41 +17,58 @@ class Encrypt:
         print("KEY:")
         pprint(key)
         print("-"*25)
+        
+        self.__validate_key(key, self.key_length)
+        self.N_k, self.N_r = self.__calculate_constants(key, self.key_length)
 
 
-        Encrypt.key_schedule = Encrypt.__generate_key_schedule(key)
+        self.key_schedule = self.__generate_key_schedule(key)
         print("-"*25)
         print("KEY SCHEDULE:")
-        pprint([[hex(a) for a in row] for row in Encrypt.key_schedule])
+        pprint([[hex(a) for a in row] for row in self.key_schedule])
         print("-"*25)
 
         encrypted_blocks = []
 
         for block in msg:
-            state = Encrypt.__add_round_key(block, Encrypt.__get_round_key(0))  # Add initial key to message block
+            state = self.__add_round_key(block, self.__get_round_key(0))  # Add initial key to message block
 
             print("round {} - state: {}".format(0, hexify_state(state)))
-            for round_i in range(1, Encrypt.N_r+1):
-                state = Encrypt.__byte_sub(state)
+            for round_i in range(1, self.N_r+1):
+                state = self.__byte_sub(state)
                 print("round {} - bytesub: {}".format(round_i, hexify_state(state)))
-                state = transpose(Encrypt.__shift_row(transpose(state)))
+                state = transpose(self.__shift_row(transpose(state)))
                 print("round {} - shift_row: {}".format(round_i, hexify_state(state)))
-                if round_i != Encrypt.N_r:
-                    state = transpose(Encrypt.__mix_columns(transpose(state)))
+                if round_i != self.N_r:
+                    state = transpose(self.__mix_columns(transpose(state)))
                     print("round {} - mix_columns: {}".format(round_i, hexify_state(state)))
 
                 print("-"*25)
                 print(f"ROUND KEY FOR ROUND {round_i}:")
-                r_key = Encrypt.__get_round_key(round_i)
+                r_key = self.__get_round_key(round_i)
                 print(hexify_state(r_key))
                 print("-"*25)
 
-                state = Encrypt.__add_round_key(state, r_key)
+                state = self.__add_round_key(state, r_key)
                 print("round {} - add_round_key: {}".format(round_i, hexify_state(state)))
 
             encrypted_blocks.append(state)
 
         return "".join([hexify_state(enc_block) for enc_block in encrypted_blocks])
+
+    @staticmethod
+    def __validate_key(key, key_length):
+        num_rounds = { # Defined in the standard as N_r
+                128: 10,
+                192: 12,
+                256: 14
+        }
+        if key_length not in num_rounds:
+            raise Exception(f"KeyLengthException: Key length must be either {', '.join([str(x) for x in num_rounds[:-1]])}, or {str(num_rounds[-1])} bits long (got {key_length}).")
+
+        given_key_length = 8 * len(key) # Assuming key is an array of bytes
+        if given_key_length != key_length:
+            raise Exception(f"KeyLengthException: Key length must be {key_length} long (got {given_key_length} bits).")
 
     @staticmethod
     def __calculate_constants(key, key_length):
@@ -96,26 +90,25 @@ class Encrypt:
         N_r = num_rounds[key_length] # Defined in the standard as being the number of rounds needed for the given key length
         return N_k, N_r
 
-    @staticmethod
-    def __generate_key_schedule(key): #TODO: add key_length as a parameter to generate only necessary round constants
-        Rcon = Encrypt.__generate_round_consts()
+    def __generate_key_schedule(self, key): #TODO: add key_length as a parameter to generate only necessary round constants
+        Rcon = self.__generate_round_consts()
 
         w = []
-        print(f"4*N_r: {4*Encrypt.N_r}")
-        for i in range(4*(Encrypt.N_r+1)): #TODO: change 11 to num_round keys needed
+        print(f"4*N_r: {4*self.N_r}")
+        for i in range(4*(self.N_r+1)): #TODO: change 11 to num_round keys needed
             #print(f"i = {i}")
-            if i < Encrypt.N_k:
+            if i < self.N_k:
                 print("Case 1")
                 w.append(key[4*i:4*i+4])
-            elif i >= Encrypt.N_k and i % Encrypt.N_k == 0:
+            elif i >= self.N_k and i % self.N_k == 0:
                 print("Case 2")
-                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], Encrypt.__transform_col(w[i - 1], Rcon[(i // Encrypt.N_k) - 1])))
-            elif i >= Encrypt.N_k and Encrypt.N_k > 6 and i % Encrypt.N_k == 4:
+                w.append(Encrypt.__xor_col(w[i - self.N_k], Encrypt.__transform_col(w[i - 1], Rcon[(i // self.N_k) - 1])))
+            elif i >= self.N_k and self.N_k > 6 and i % self.N_k == 4:
                 print("Case 3")
-                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], [lookups.s_box[x] for x in w[i-1]]))
+                w.append(Encrypt.__xor_col(w[i - self.N_k], [lookups.s_box[x] for x in w[i-1]]))
             else:
                 print("Case 4")
-                w.append(Encrypt.__xor_col(w[i - Encrypt.N_k], w[i-1]))
+                w.append(Encrypt.__xor_col(w[i - self.N_k], w[i-1]))
             #print(f"w[{i}] = {''.join([hex(a)[2:].rjust(2, '0') for a in w[i]])}")
 
         return w
@@ -179,9 +172,8 @@ class Encrypt:
         print("-"*25)
         return [Encrypt.__xor_col(state[i], round_key[i]) for i in range(len(round_key))]
 
-    @staticmethod
-    def __get_round_key(cur_round):
-        return Encrypt.key_schedule[4*cur_round:4*cur_round+4]
+    def __get_round_key(self, cur_round):
+        return self.key_schedule[4*cur_round:4*cur_round+4]
 
     @staticmethod
     def __round_const(cur_round):  # Return the round constant for round cur_round
@@ -226,4 +218,17 @@ def hexify_state(state):
     hexed_list = [hex(j)[2:].rjust(2, '0') for i in state for j in i]
     #print(hexed_list)
     return "".join(hexed_list)
+
+
+class AES128(Encrypt):
+    def __init__(self):
+        super().__init__(128)
+
+class AES192(Encrypt):
+    def __init__(self):
+        super().__init__(192)
+
+class AES256(Encrypt):
+    def __init__(self):
+        super().__init__(256)
 

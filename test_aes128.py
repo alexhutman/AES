@@ -1,5 +1,5 @@
 import hashlib
-from encrypt import Encrypt
+from encrypt import AES128, AES192, AES256
 import decrypt
 
 from matrix import transpose, transpose_blocks
@@ -69,7 +69,7 @@ def test():
 
     ciphertexts = []
     res_strings = []
-    for i, func in enumerate([Encrypt.AES128, Encrypt.AES192, Encrypt.AES256]): 
+    for i, cls in enumerate([AES128(), AES192(), AES256()]): 
         # 128, 192, and 256 bit test vectors from bottom of https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
         key_list = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f"]
         if i > 0:
@@ -79,10 +79,10 @@ def test():
 
         hexed_key = hexify(key_list)
 
-        ciphertexts.append(func(blocked, hexed_key))
+        ciphertexts.append(cls.encrypt(blocked, hexed_key))
 
         if ciphertexts[i] != true_ciphertexts[i]:
-            res_strings.append(f"{func.__name__} FAILED: \"{ciphertexts[i]}\" != \"{true_ciphertexts[i]}\"")
+            res_strings.append(f"{cls.__name__} FAILED: \"{ciphertexts[i]}\" != \"{true_ciphertexts[i]}\"")
 
     print("-"*25)
 
